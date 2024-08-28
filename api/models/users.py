@@ -1,32 +1,56 @@
 __all__ = [
     "BaseUser",
+    "CreationUserCustomer",
+    "CreationUserArtist",
     "LoginUser",
     "PublicStoredUser",
     "PrivateStoredUser",
-    "CreationUser",
+    "CreateUserArtistAndArtist",
+    "CreationUserAdmin",
 ]
 
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 from pydantic_mongo import PydanticObjectId
+from .artists import CreateArtist
 
 
 class Role(str, Enum):
     admin = "admin"
+    artist = "artist"
     customer = "customer"
-    seller = "seller"
+
+
+class CreationRole(str, Enum):
+    customer = "customer"
+    artist = "artist"
 
 
 class BaseUser(BaseModel):
     username: str
-    role: Role = Role.admin
-    email: str = Field(default=None)
-    image: str = Field(default=None)
+    email: str
+    role: Role
 
 
-class CreationUser(BaseUser):
+class CreationUserCustomer(BaseUser):
+    role: CreationRole = CreationRole.customer
     password: str
+
+
+class CreationUserArtist(BaseUser):
+    role: CreationRole = CreationRole.artist
+    password: str
+    model_config = ConfigDict(extra="ignore")
+
+
+class CreationUserAdmin(BaseUser):
+    role: Role = Role.admin
+    password: str
+
+
+class CreateUserArtistAndArtist(CreationUserArtist, CreateArtist):
+    pass
 
 
 class LoginUser(BaseModel):
@@ -35,7 +59,8 @@ class LoginUser(BaseModel):
 
 
 class PublicStoredUser(BaseUser):
-    id: PydanticObjectId
+    id: PydanticObjectId = Field(validation_alias=AliasChoices("_id", "id"))
+    model_config = ConfigDict(extra="ignore")
 
 
 class PrivateStoredUser(BaseUser):
