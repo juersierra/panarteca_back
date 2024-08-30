@@ -4,21 +4,10 @@ from fastapi import Response
 from fastapi.routing import APIRouter
 
 
-from ..models import CreationUserCustomer, LoginUser, CreationUserAdmin
+from ..models import LoginUser
 from ..services import UsersServiceDependency, AuthServiceDependency, SecurityDependency
 
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
-
-
-@auth_router.post("/register")
-def register(
-    user: CreationUserCustomer,
-    users: UsersServiceDependency,
-    auth: AuthServiceDependency,
-):
-    hash_password = auth.get_password_hash(user.password)
-    inserted_id = users.create_one(user, hash_password)
-    return {"result message": f"User created with id:{inserted_id}"}
 
 
 @auth_router.post("/login")
@@ -38,7 +27,7 @@ def login_with_cookie(
 def read_current_user(security: SecurityDependency):
     return dict(
         id=security.auth_user_id,
-        name=security.auth_user_name,
+        username=security.auth_user_username,
         email=security.auth_user_email,
         role=security.auth_user_role,
     )

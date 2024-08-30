@@ -1,4 +1,4 @@
-__all__ = ["Artwork", "UpdateArtwork", "SellArtwork", "StoredArtwork"]
+__all__ = ["Artwork", "UpdateArtwork", "StoredArtwork", "BaseArtwork"]
 
 from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
@@ -11,9 +11,17 @@ class Artwork(BaseModel):
     year: int
     price: float
     serie: str
-    artist_id: PydanticObjectId
-    collection_id: PydanticObjectId = Field(default=None)
     sold: bool = False
+    artist_id: PydanticObjectId
+
+
+class BaseArtwork(BaseModel):
+    name: str
+    description: str
+    technique: str
+    year: int
+    price: float
+    serie: str
 
 
 class UpdateArtwork(BaseModel):
@@ -23,14 +31,10 @@ class UpdateArtwork(BaseModel):
     year: int = Field(default=None)
     price: float = Field(default=None)
     serie: str = Field(default=None)
-    artist_id: PydanticObjectId = Field(default=None)
     collection_id: PydanticObjectId = Field(default=None)
 
 
-class SellArtwork(BaseModel):
+class StoredArtwork(BaseArtwork):
     id: PydanticObjectId = Field(alias="_id")
-    sold: bool = True
-
-
-class StoredArtwork(Artwork):
-    id: PydanticObjectId = Field(alias="_id")
+    sold: bool
+    artist_id: PydanticObjectId

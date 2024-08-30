@@ -1,10 +1,14 @@
 from fastapi import APIRouter
 
-from ..models import CreationUserAdmin, CreateUserArtistAndArtist
-from ..services import UsersServiceDependency, AuthServiceDependency
+from ..models import CreationUserAdmin, CreateUserArtistAndArtist, CreationUserCustomer
+from ..services import (
+    UsersServiceDependency,
+    AuthServiceDependency,
+    ArtistsServiceDependency,
+)
 
 
-users_router = APIRouter(prefix="/users", tags=["Auth"])
+users_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @users_router.post("/create_admin")
@@ -20,8 +24,20 @@ def create_admin(
 def create_artist(
     artist: CreateUserArtistAndArtist,
     users: UsersServiceDependency,
+    artists: ArtistsServiceDependency,
     auth: AuthServiceDependency,
 ):
     hash_password = auth.get_password_hash(artist.password)
-    inserted_id = users.create_artist(artist, hash_password)
+    inserted_id = users.create_artist(artist, artists, hash_password)
+    return {"result message": f"Artist created with id: {inserted_id}"}
+
+
+@users_router.post("/create_customer")
+def create_customer(
+    customer: CreationUserCustomer,
+    users: UsersServiceDependency,
+    auth: AuthServiceDependency,
+):
+    hash_password = auth.get_password_hash(customer.password)
+    inserted_id = users.create_artist(customer, hash_password)
     return {"result message": f"Artist created with id: {inserted_id}"}

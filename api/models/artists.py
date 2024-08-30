@@ -1,8 +1,8 @@
 __all__ = [
     "Artist",
+    "CreateArtist",
     "PublicUpdateArtist",
     "PrivateUpdateArtist",
-    "CreateArtist",
     "PublicStoredArtist",
     "PrivateStoredArtist",
 ]
@@ -15,7 +15,15 @@ class Artist(BaseModel):
     name: str
     pseudo: str
     description: str
-    image: str = Field(default=None)
+    image: str | None = Field(default=None)
+    user_id: PydanticObjectId
+
+
+class CreateArtist(BaseModel):
+    name: str
+    pseudo: str
+    description: str
+    image: str | None = Field(default=None)
 
 
 class PublicUpdateArtist(BaseModel):
@@ -31,11 +39,6 @@ class PrivateUpdateArtist(BaseModel):
     description: str = Field(default=None)
     image: str = Field(default=None)
     commision: int = Field(default=None)
-
-
-class CreateArtist(Artist):
-    commision: int = 15
-    model_config = ConfigDict(extra="ignore")
 
 
 class PublicStoredArtist(Artist):

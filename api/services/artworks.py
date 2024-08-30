@@ -6,8 +6,9 @@ from typing import Annotated
 from fastapi import Depends
 from pydantic_mongo import PydanticObjectId
 
+from ..__common_deps import QueryParamsDependency
 from ..config import COLLECTIONS, db
-from ..models import Artwork, StoredArtwork
+from ..models import BaseArtwork, UpdateArtwork, StoredArtwork
 
 
 class ArtworksService:
@@ -15,17 +16,17 @@ class ArtworksService:
     collection = db[collection_name]
 
     @classmethod
-    def create_one(cls, artwork: Artwork):
-        result = cls.collection.insert_one(artwork.model_dump())
+    def create_one(cls, artwork: BaseArtwork):
+        result = cls.collection.insert_one(artwork)
         if result:
             return str(result.inserted_id)
         return None
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls, params: QueryParamsDependency):
         return [
             StoredArtwork.model_validate(artwork).model_dump()
-            for artwork in cls.collection.find()
+            for artwork in params.query_collection(cls.collection)
         ]
 
     @classmethod
@@ -36,7 +37,7 @@ class ArtworksService:
             return None
 
     @classmethod
-    def update_one(cls, id: PydanticObjectId, artwork: Artwork):
+    def update_one(cls, id: PydanticObjectId, artwork: UpdateArtwork):
         return cls.collection.find_one_and_update(
             {"_id": id}, {"$set": artwork.model_dump()}, return_document=True
         )

@@ -34,7 +34,6 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Credentials incorrect",
             )
-        print(db_user)
         userdata = PublicStoredUser.model_validate(db_user).model_dump()
         access_token = jwt_bearer.create_access_token(
             subject=userdata, expires_delta=token_expiration_time

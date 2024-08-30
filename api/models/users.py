@@ -11,7 +11,7 @@ __all__ = [
 
 from enum import Enum
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, Field
 from pydantic_mongo import PydanticObjectId
 from .artists import CreateArtist
 
@@ -41,7 +41,6 @@ class CreationUserCustomer(BaseUser):
 class CreationUserArtist(BaseUser):
     role: CreationRole = CreationRole.artist
     password: str
-    model_config = ConfigDict(extra="ignore")
 
 
 class CreationUserAdmin(BaseUser):
@@ -60,7 +59,6 @@ class LoginUser(BaseModel):
 
 class PublicStoredUser(BaseUser):
     id: PydanticObjectId = Field(validation_alias=AliasChoices("_id", "id"))
-    model_config = ConfigDict(extra="ignore")
 
 
 class PrivateStoredUser(BaseUser):

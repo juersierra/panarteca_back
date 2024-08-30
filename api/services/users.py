@@ -74,14 +74,12 @@ class UsersService:
     def create_artist(
         cls,
         artist: CreateUserArtistAndArtist,
+        artists: ArtistsServiceDependency,
         hash_password: str,
     ):
-        # TODO CREANDO USER Y ARTISTA CON LA MISMA INFO (sacar name, pseudo, etc de user y username, email y psw de artista)
         try:
             existing_user = cls.get_one(username=artist.username, email=artist.email)
-            existing_artist = ArtistsServiceDependency.find_one(
-                name=artist.name, pseudo=artist.pseudo
-            )
+            existing_artist = artists.get_one(name=artist.name, pseudo=artist.pseudo)
             if existing_user:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT, detail="User already exists"
@@ -93,16 +91,19 @@ class UsersService:
         except HTTPException:
             pass
 
-        insert_user = CreationUserArtist.model_validate(artist).model_dump(
+        artist_dict = artist.model_dump()
+        insert_user = CreationUserArtist.model_validate(artist_dict).model_dump(
             exclude={"password"}, exclude_unset=True
         )
         insert_user.update(hash_password=hash_password)
         result_user = cls.collection.insert_one(insert_user)
 
         assert (collection_artists := "artists") in COLLECTIONS
-        artists_col = db[collection_artists]
-        insert_artist = CreateArtist.model_validate(artist).model_dump()
-        result_artist = artists_col.insert_one(insert_artist)
+        artists_coll = db[collection_artists]
+
+        insert_artist = CreateArtist.model_validate(artist_dict).model_dump()
+        insert_artist.update(user_id=result_user.inserted_id, commision=15)
+        result_artist = artists_coll.insert_one(insert_artist)
 
         if result_user and result_artist:
             return {
