@@ -5,6 +5,7 @@ from pydantic_mongo import PydanticObjectId
 
 from ..config import COLLECTIONS, db
 from ..models import (
+    CreationUser,
     CreationUserAdmin,
     CreationUserCustomer,
     CreationUserArtist,
@@ -24,11 +25,11 @@ class UsersService:
     @classmethod
     def create_admin(
         cls,
-        admin: CreationUserAdmin,
+        user: CreationUserAdmin,
         hash_password: str,
     ):
         try:
-            existing_user = cls.get_one(username=admin.username, email=admin.email)
+            existing_user = cls.get_one(username=user.username, email=user.email)
             if existing_user:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT, detail="Admin already exists"
@@ -36,10 +37,11 @@ class UsersService:
         except HTTPException:
             pass
 
-        insert_admin = admin.model_dump(exclude={"password"}, exclude_unset=True)
-        insert_admin.update(hash_password=hash_password)
+        user_dict = user.model_dump(exclude={"password"}, exclude_unset=True)
+        user_dict.update({"hash_password": hash_password})
+        insert_user = CreationUserAdmin.model_validate(user_dict).model_dump()
 
-        result = cls.collection.insert_one(insert_admin)
+        result = cls.collection.insert_one(insert_user)
         if result:
             return str(result.inserted_id)
         return None
@@ -47,13 +49,13 @@ class UsersService:
     @classmethod
     def create_customer(
         cls,
-        customer: CreationUserCustomer,
+        user: CreationUser,
         hash_password: str,
     ):
         try:
             existing_user = cls.get_one(
-                username=customer.username,
-                email=customer.email,
+                username=user.username,
+                email=user.email,
             )
             if existing_user:
                 raise HTTPException(
@@ -62,8 +64,9 @@ class UsersService:
         except HTTPException:
             pass
 
-        insert_user = customer.model_dump(exclude={"password"}, exclude_unset=True)
-        insert_user.update(hash_password=hash_password)
+        user_dict = user.model_dump(exclude={"password"}, exclude_unset=True)
+        user_dict.update({"hash_password": hash_password})
+        insert_user = CreationUserCustomer.model_validate(user_dict).model_dump()
 
         result = cls.collection.insert_one(insert_user)
         if result:
@@ -91,26 +94,27 @@ class UsersService:
         except HTTPException:
             pass
 
-        artist_dict = artist.model_dump()
-        insert_user = CreationUserArtist.model_validate(artist_dict).model_dump(
-            exclude={"password"}, exclude_unset=True
-        )
-        insert_user.update(hash_password=hash_password)
-        result_user = cls.collection.insert_one(insert_user)
+        # user_dict = artist.model_dump()
+        # user_dict.update(hash_password=hash_password)
+
+        # insert_user = CreationUserArtist.model_validate(user_dict).model_dump()
+        # result_user = cls.collection.insert_one(insert_user)
 
         assert (collection_artists := "artists") in COLLECTIONS
         artists_coll = db[collection_artists]
 
-        insert_artist = CreateArtist.model_validate(artist_dict).model_dump()
-        insert_artist.update(user_id=result_user.inserted_id, commision=15)
+        artist_dict = artist.model_dump()
+        artist_dict.update(user_id="66d32a13f2c56068349e1868", commision=15)
+        insert_artist = CreateArtist.model_validate(artist_dict)
+        print(insert_artist)
         result_artist = artists_coll.insert_one(insert_artist)
 
-        if result_user and result_artist:
-            return {
-                "user_id": result_user.inserted_id,
-                "artist_id": result_artist.inserted_id,
-            }
-        return None
+        # if result_user and result_artist:
+        #     return {
+        #         "user_id": result_user.inserted_id,
+        #         "artist_id": result_artist.inserted_id,
+        #     }
+        # return None
 
     @classmethod
     def get_all(cls, params: QueryParamsDependency):

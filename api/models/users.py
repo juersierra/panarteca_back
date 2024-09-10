@@ -3,6 +3,7 @@ __all__ = [
     "CreationUserCustomer",
     "CreationUserArtist",
     "LoginUser",
+    "CreationUser",
     "PublicStoredUser",
     "PrivateStoredUser",
     "CreateUserArtistAndArtist",
@@ -13,7 +14,7 @@ from enum import Enum
 
 from pydantic import AliasChoices, BaseModel, Field
 from pydantic_mongo import PydanticObjectId
-from .artists import CreateArtist
+from .artists import Artist
 
 
 class Role(str, Enum):
@@ -27,28 +28,35 @@ class CreationRole(str, Enum):
     artist = "artist"
 
 
-class BaseUser(BaseModel):
+class User(BaseModel):
     username: str
     email: str
+
+
+class BaseUser(User):
     role: Role
 
 
-class CreationUserCustomer(BaseUser):
+class CreationUser(User):
+    password: str
+
+
+class CreationUserCustomer(User):
+    hash_password: str
     role: CreationRole = CreationRole.customer
-    password: str
 
 
-class CreationUserArtist(BaseUser):
+class CreationUserArtist(User):
+    hash_password: str
     role: CreationRole = CreationRole.artist
-    password: str
 
 
-class CreationUserAdmin(BaseUser):
+class CreationUserAdmin(User):
+    hash_password: str
     role: Role = Role.admin
-    password: str
 
 
-class CreateUserArtistAndArtist(CreationUserArtist, CreateArtist):
+class CreateUserArtistAndArtist(CreationUser, Artist):
     pass
 
 

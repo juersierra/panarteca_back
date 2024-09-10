@@ -43,14 +43,25 @@ async def create_artwork(
     insert_artwork.update(
         artist_id=PydanticObjectId(
             artists.get_one(user_id=PydanticObjectId(security.auth_user_id)).get("id")
-        )
+        ),
+        sold=False,
     )
     inserted_id = artworks.create_one(insert_artwork)
     return {"result message": f"Artwork created with id: {inserted_id}"}
 
 
-@artwork_router.put("/{id}")
+@artwork_router.patch("/{id}")
 async def update_artwork(
-    id: PydanticObjectId, artwork: UpdateArtwork, artworks: ArtworksServiceDependency
+    id: PydanticObjectId,
+    artwork: UpdateArtwork,
+    artworks: ArtworksServiceDependency,
+    artists: ArtistsServiceDependency,
+    security: SecurityDependency,
 ):
-    return artworks.update_one(id, artwork)
+    security.is_artist_or_raise
+    artist_id = artists.get_one(user_id=PydanticObjectId(security.auth_user_id)).get(
+        "id"
+    )
+    print(artist_id)
+    print(artist_id)
+    return artworks.update_one(id, artist_id, artwork)

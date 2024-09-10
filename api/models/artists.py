@@ -7,7 +7,7 @@ __all__ = [
     "PrivateStoredArtist",
 ]
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
 
 
@@ -16,14 +16,11 @@ class Artist(BaseModel):
     pseudo: str
     description: str
     image: str | None = Field(default=None)
+
+
+class CreateArtist(Artist):
     user_id: PydanticObjectId
-
-
-class CreateArtist(BaseModel):
-    name: str
-    pseudo: str
-    description: str
-    image: str | None = Field(default=None)
+    commision: int
 
 
 class PublicUpdateArtist(BaseModel):
@@ -33,11 +30,7 @@ class PublicUpdateArtist(BaseModel):
     image: str = Field(default=None)
 
 
-class PrivateUpdateArtist(BaseModel):
-    name: str = Field(default=None)
-    pseudo: str = Field(default=None)
-    description: str = Field(default=None)
-    image: str = Field(default=None)
+class PrivateUpdateArtist(PublicUpdateArtist):
     commision: int = Field(default=None)
 
 
@@ -47,4 +40,5 @@ class PublicStoredArtist(Artist):
 
 class PrivateStoredArtist(Artist):
     id: PydanticObjectId = Field(alias="_id")
+    user_id: PydanticObjectId
     commision: int

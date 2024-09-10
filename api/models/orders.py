@@ -1,6 +1,7 @@
-__all__ = ["Order", "StoredOrder"]
+__all__ = ["Order", "Item", "OrderItems", "StoredOrder"]
 
 from enum import Enum
+from typing import List
 from pydantic import BaseModel, Field
 from pydantic_mongo import PydanticObjectId
 
@@ -11,11 +12,19 @@ class Status(str, Enum):
     cancelled = "cancelled"
 
 
-class Order(BaseModel):
+class Item(BaseModel):
+    artwork_id: str
+    quantity: int
+
+
+class OrderItems(BaseModel):
+    order_items: List[Item]
+
+
+class Order(OrderItems):
     customer_id: PydanticObjectId
-    artwork_id: PydanticObjectId
     price: float
-    status: Status
+    status: Status = Status.pending
 
 
 class StoredOrder(Order):

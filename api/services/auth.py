@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi_jwt import JwtAccessBearer, JwtAuthorizationCredentials
 from passlib.context import CryptContext
+from pydantic_mongo import PydanticObjectId
 
 from ..config import token_expiration_time, SECRET_KEY
 from ..models import LoginUser, PublicStoredUser
@@ -49,6 +50,7 @@ class SecurityService:
         self.auth_user_username = credentials.subject.get("username")
         self.auth_user_email = credentials.subject.get("email")
         self.auth_user_role = credentials.subject.get("role")
+        self.auth_user_artist_id = credentials.subject.get("artist_id")
 
     @property
     def is_admin(self):
@@ -64,17 +66,38 @@ class SecurityService:
 
     @property
     def is_admin_or_raise(self):
-        assert self.auth_user_role == "admin", "User does not have admin role"
+        role = self.auth_user_role
+        if role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User does not have admin role",
+            )
 
     @property
     def is_artist_or_raise(self):
         role = self.auth_user_role
-        assert role == "admin" or role == "artist", "User does not have artist role"
+        if role != "admin" and role != "artist":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User does not have artist role",
+            )
 
     @property
     def is_customer_or_raise(self):
         role = self.auth_user_role
-        assert role == "admin" or role == "customer", "User does not have customer role"
+        if role != "admin" and role != "customer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User does not have customer role",
+            )
+
+    @property
+    def is_owner_or_raise(self, id: PydanticObjectId):
+        if id != self.auth_user_artist_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User does not the artist",
+            )
 
 
 AuthServiceDependency = Annotated[AuthService, Depends()]
